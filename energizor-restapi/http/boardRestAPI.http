@@ -1,0 +1,49 @@
+### 게시글 조회
+GET http://localhost:8031/board/list?boardTypeCode=1&offset=1
+Content-Type: application/json
+Accept: */*
+
+### 게시글 상세 조회
+GET http://localhost:8031/board/list/detail/2
+Content-Type: application/json
+Accept: */*
+
+### 게시글 등록
+POST http://localhost:8031/board/register
+Content-Type: application/json
+Accept: */*
+
+{
+  "title": "신규등록11111",
+  "content": "신규글내용",
+  "viewCount": 3,
+  "username": "박사원",
+  "userRank": "팀장",
+  "teamName": "개발1팀",
+  "userCode": 2,
+  "boardTypeCode": 2
+
+
+}
+
+### 게시글 수정
+PATCH http://localhost:8031/board/update
+Content-Type: application/json
+Accept: */*
+
+{
+  "boardCode": 3,
+  "title": "한 번 더 수정한 제목",
+  "content": "한 번 더 수정한 내용"
+}
+
+### 게시글 삭제
+PATCH http://localhost:8031/board/delete/7
+Content-Type: application/json
+Accept: */*
+
+### 댓글 조회
+GET http://localhost:8031/board/comment/2
+Content-Type: application/json
+Accept: */*
+
