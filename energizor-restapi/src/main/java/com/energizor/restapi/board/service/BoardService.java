@@ -21,4 +21,11 @@ public interface BoardService {
     Object delete(int boardCode);
 
     BoardCommentDTO findComment(int boardCode);
+
+    Object registerComment(BoardCommentDTO boardCommentDTO);
+
+    String updateComment(BoardCommentDTO boardCommentDTO);
+
+    String deleteComment(int commentCode);
+
 }

@@ -28,6 +28,20 @@ public class BoardComment extends BaseEntity{
     @JoinColumn(name="board_code")
     private Board board;
 
+    public BoardComment commentCode(int commentCode) {
+        this.commentCode=commentCode;
+        return this;
+    }
+
+    public BoardComment commentContent(String commentContent) {
+        this.commentContent=commentContent;
+        return this;
+    }
+
+    public BoardComment build() {
+        return new BoardComment(commentCode,commentContent,deleteDate,board);
+    }
+
     public void changeReplyDeleteDate(LocalDateTime deleteDate) {this.deleteDate=deleteDate;}
 
 }

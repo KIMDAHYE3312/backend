@@ -1,5 +1,6 @@
 package com.energizor.restapi.board.controller;
 
+import com.energizor.restapi.board.dto.BoardCommentDTO;
 import com.energizor.restapi.board.dto.BoardDTO;
 import com.energizor.restapi.board.service.BoardService;
 import com.energizor.restapi.common.Criteria;
@@ -75,6 +76,24 @@ public class BoardController {
     public ResponseEntity<ResponseDTO> findComment(@PathVariable int boardCode) {
 
         return ResponseEntity.ok().body(new ResponseDTO(HttpStatus.OK,"댓글 조회 성공",boardService.findComment(boardCode)));
+    }
+
+    @PostMapping("/comment/register")
+    public ResponseEntity<ResponseDTO> registerComment(@RequestBody BoardCommentDTO boardCommentDTO) {
+
+        return ResponseEntity.ok().body(new ResponseDTO(HttpStatus.OK,"댓글 등록 성공",boardService.registerComment(boardCommentDTO)));
+    }
+
+    @PatchMapping("/comment/update")
+    public ResponseEntity<ResponseDTO> updateComment(@RequestBody BoardCommentDTO boardCommentDTO) {
+
+        return ResponseEntity.ok().body(new ResponseDTO(HttpStatus.OK,"댓글 수정 성공",boardService.updateComment(boardCommentDTO)));
+    }
+
+    @PatchMapping("/comment/delete/{commentCode}")
+    public ResponseEntity<ResponseDTO> deleteComment(@PathVariable int commentCode) {
+
+        return ResponseEntity.ok().body(new ResponseDTO(HttpStatus.OK,"댓글 삭제 성공",boardService.deleteComment(commentCode)));
     }
 
 

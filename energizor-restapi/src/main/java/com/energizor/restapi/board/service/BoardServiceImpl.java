@@ -4,6 +4,7 @@ import com.energizor.restapi.board.dto.BoardCommentDTO;
 import com.energizor.restapi.board.dto.BoardDTO;
 import com.energizor.restapi.board.entity.Board;
 import com.energizor.restapi.board.entity.BoardComment;
+import com.energizor.restapi.board.repository.BoardCommentRepository;
 import com.energizor.restapi.board.repository.BoardRepository;
 import com.energizor.restapi.common.Criteria;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import java.util.Optional;
 public class BoardServiceImpl implements BoardService{
 
     private final BoardRepository boardRepository;
+    private final BoardCommentRepository boardCommentRepository;
     private final ModelMapper modelMapper;
 
 
@@ -108,7 +110,7 @@ public class BoardServiceImpl implements BoardService{
     @Transactional
     @Override
     public Object delete(int boardCode) {
-        log.info("[BoardService] start =================");
+        log.info("[BoardService] delete start =================");
 
         Optional<Board> boardResult= Optional.ofNullable(boardRepository.findByCode(boardCode));
         LocalDateTime dateTime=LocalDateTime.now();
@@ -127,8 +129,8 @@ public class BoardServiceImpl implements BoardService{
     @Override
     public BoardCommentDTO findComment(int boardCode) {
 
-        log.info("[BoardService start] ======================");
-        BoardComment boardComment=boardRepository.findByCodeWithComment(boardCode);
+        log.info("[BoardService] findComment start ======================");
+        BoardComment boardComment=boardCommentRepository.findByCodeWithComment(boardCode);
         BoardCommentDTO boardCommentDTO=modelMapper.map(boardComment, BoardCommentDTO.class);
 
 
@@ -141,5 +143,52 @@ public class BoardServiceImpl implements BoardService{
 
 
         return boardCommentDTO;
+    }
+
+    @Override
+    public Object registerComment(BoardCommentDTO boardCommentDTO) {
+        log.info("[BoardService] registerComment start===============");
+
+        BoardComment insertBoardComment=modelMapper.map(boardCommentDTO,BoardComment.class);
+        BoardComment savedBoard=boardCommentRepository.save(insertBoardComment);
+
+        log.info("[BoardService] register end ==================");
+        return "댓글 등록 성공";
+    }
+
+    @Transactional
+    @Override
+    public String updateComment(BoardCommentDTO boardCommentDTO) {
+
+        log.info("[BoardService] updateComment start ================ ");
+
+        Optional<BoardComment> result= Optional.ofNullable(boardCommentRepository.findByCommentCode(boardCommentDTO.getCommentCode()));
+
+
+        if(result.isPresent()) {
+            BoardComment boardComment=result.get();
+            boardComment.commentContent(boardCommentDTO.getCommentContent()).build();
+        }
+
+        return "댓글 수정 성공";
+    }
+
+    @Override
+    public String deleteComment(int commentCode) {
+
+        log.info("[BoardService] deleteComment start =================");
+        Optional<BoardComment> result= Optional.ofNullable(boardCommentRepository.findByCommentCode(commentCode));
+
+        LocalDateTime dateTime=LocalDateTime.now();
+        if(result.isPresent()) {
+            BoardComment boardComment=result.get();
+
+            boardComment.changeReplyDeleteDate(dateTime);
+            boardCommentRepository.save(boardComment);
+
+
+        }
+
+        return "댓글 삭제 성공";
     }
 }

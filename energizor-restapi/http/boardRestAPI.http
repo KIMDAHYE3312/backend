@@ -47,3 +47,27 @@ GET http://localhost:8031/board/comment/2
 Content-Type: application/json
 Accept: */*
 
+### 댓글 등록
+POST http://localhost:8031/board/comment/register
+Content-Type: application/json
+Accept: */*
+
+{
+  "commentContent": "신규 댓글 내용",
+  "boardCode": "2"
+}
+
+### 댓글 수정
+PATCH http://localhost:8031/board/comment/update
+Content-Type: application/json
+Accept: */*
+
+{
+  "commentCode": 3,
+  "commentContent": "댓글 수정 테스트222"
+}
+
+### 댓글 삭제
+PATCH http://localhost:8031/board/comment/delete/2
+Content-Type: application/json
+Accept: */*
