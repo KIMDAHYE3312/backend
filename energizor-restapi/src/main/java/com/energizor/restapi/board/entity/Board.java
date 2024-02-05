@@ -5,6 +5,8 @@ import lombok.*;
 import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -38,6 +40,9 @@ public class Board extends BaseEntity{
     @JoinColumn(name="board_type_code")
     private BoardType boardType;
 
+    @OneToMany(mappedBy = "board")
+    private List<InterestBoard> interestBoards=new ArrayList<>();
+
     public Board boardCode(int boardCode) {
         this.boardCode=boardCode;
         return this;
@@ -59,7 +64,7 @@ public class Board extends BaseEntity{
     }
 
     public Board build() {
-        return new Board(boardCode,title,content,viewCount,deleteDate,user,boardType);
+        return new Board(boardCode,title,content,viewCount,deleteDate,user,boardType,interestBoards);
     }
 
     public void changeBoardDeletedAt(LocalDateTime deleteDate) {this.deleteDate=deleteDate;}

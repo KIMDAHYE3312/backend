@@ -1,7 +1,8 @@
 package com.energizor.restapi.board.controller;
 
-import com.energizor.restapi.board.dto.BoardCommentDTO;
-import com.energizor.restapi.board.dto.BoardDTO;
+import com.energizor.restapi.board.dto.*;
+import com.energizor.restapi.board.entity.Board;
+import com.energizor.restapi.board.entity.InterestBoard;
 import com.energizor.restapi.board.service.BoardService;
 import com.energizor.restapi.common.Criteria;
 import com.energizor.restapi.common.PageDTO;
@@ -96,5 +97,38 @@ public class BoardController {
         return ResponseEntity.ok().body(new ResponseDTO(HttpStatus.OK,"댓글 삭제 성공",boardService.deleteComment(commentCode)));
     }
 
+    @GetMapping("/interest/list")
+    public ResponseEntity<ResponseDTO> findInterestBoardList (PageRequestDTO pageRequestDTO) {
+
+       log.info("list:"+pageRequestDTO);
+
+       PageResultDTO response=boardService.findInterestBoardList(pageRequestDTO);
+       log.info("response : "+response);
+
+       return ResponseEntity.ok().body(new ResponseDTO(HttpStatus.OK,"관심게시글 조회 성공",response));
+    }
+
+    @GetMapping("/interest/detail/{interestCode}")
+    public ResponseEntity<ResponseDTO> findDetailInterestBoard(@PathVariable int interestCode) {
+
+        return ResponseEntity.ok().body(new ResponseDTO(HttpStatus.OK,"관심게시글 상세 조회",boardService.findDetailInterestBoard(interestCode)));
+    }
+
+
+
+    @PostMapping("/interest/register")
+    public ResponseEntity<ResponseDTO> registerInterestBoard(@RequestBody InterestBoardDTO interestboardDTO) {
+
+        int boardCode=interestboardDTO.getBoardCode();
+        int userCode=interestboardDTO.getUserCode();
+        return ResponseEntity.ok().body(new ResponseDTO(HttpStatus.OK,"관심게시글 등록 성공",boardService.registerInterestBoard(boardCode,userCode)));
+    }
+
+    @PatchMapping("/interest/delete")
+    public ResponseEntity<ResponseDTO> deleteInterestBoard(@RequestBody InterestBoardDTO interestBoardDTO) {
+
+        int interestCode=interestBoardDTO.getInterestCode();
+        return ResponseEntity.ok().body(new ResponseDTO(HttpStatus.OK,"관심게시글 삭제",boardService.deleteInterestBoard(interestCode)));
+    }
 
 }

@@ -1,12 +1,17 @@
 package com.energizor.restapi.board.service;
 
-import com.energizor.restapi.board.dto.BoardCommentDTO;
-import com.energizor.restapi.board.dto.BoardDTO;
+import com.energizor.restapi.board.dto.*;
 import com.energizor.restapi.board.entity.Board;
 import com.energizor.restapi.board.entity.BoardComment;
+import com.energizor.restapi.board.entity.InterestBoard;
+import com.energizor.restapi.board.entity.User;
 import com.energizor.restapi.board.repository.BoardCommentRepository;
 import com.energizor.restapi.board.repository.BoardRepository;
+import com.energizor.restapi.board.repository.InterestBoardRepository;
 import com.energizor.restapi.common.Criteria;
+import com.energizor.restapi.board.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
@@ -18,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +34,8 @@ public class BoardServiceImpl implements BoardService{
 
     private final BoardRepository boardRepository;
     private final BoardCommentRepository boardCommentRepository;
+    private final UserRepository userRepository;
+    private final InterestBoardRepository interestBoardRepository;
     private final ModelMapper modelMapper;
 
 
@@ -80,14 +89,16 @@ public class BoardServiceImpl implements BoardService{
     }
 
     @Override
-    public String register(BoardDTO boardDTO) {
+    public BoardDTO register(BoardDTO boardDTO) {
         log.info("[BoardService] register start===============");
 
         Board insertBoard=modelMapper.map(boardDTO,Board.class);
         Board savedBoard=boardRepository.save(insertBoard);
 
+        BoardDTO savedBoardDTO=modelMapper.map(savedBoard, BoardDTO.class);
+
         log.info("[BoardService] register end ==================");
-        return "게시판 글 등록 성공";
+        return savedBoardDTO;
     }
 
     @Transactional
@@ -104,12 +115,12 @@ public class BoardServiceImpl implements BoardService{
             board.content(boardDTO.getContent()).build();
         }
 
-        return "게시판 글 수정 성공";
+        return null;
     }
 
     @Transactional
     @Override
-    public Object delete(int boardCode) {
+    public BoardDTO delete(int boardCode) {
         log.info("[BoardService] delete start =================");
 
         Optional<Board> boardResult= Optional.ofNullable(boardRepository.findByCode(boardCode));
@@ -118,12 +129,25 @@ public class BoardServiceImpl implements BoardService{
         if(boardResult.isPresent()) {
             Board board=boardResult.get();
 
+            Optional<List<BoardComment>> commentResult=boardCommentRepository.findByBoardCode(boardResult.get().getBoardCode());
+
+            if(commentResult.isPresent()) {
+                List<BoardComment> commentEntity=commentResult.get();
+
+                commentEntity.forEach(el-> {
+                    el.changeReplyDeleteDate(dateTime);
+                    boardCommentRepository.save(el);
+                });
+            }
+
             board.changeBoardDeletedAt(dateTime);
-            boardRepository.save(board);
+            Board boardEntity=boardRepository.save(board);
 
+            BoardDTO response=modelMapper.map(boardEntity, BoardDTO.class);
 
+            return response;
         }
-        return "게시글 삭제 성공";
+        return null;
     }
 
     @Override
@@ -146,14 +170,16 @@ public class BoardServiceImpl implements BoardService{
     }
 
     @Override
-    public Object registerComment(BoardCommentDTO boardCommentDTO) {
+    public BoardCommentDTO registerComment(BoardCommentDTO boardCommentDTO) {
         log.info("[BoardService] registerComment start===============");
 
         BoardComment insertBoardComment=modelMapper.map(boardCommentDTO,BoardComment.class);
-        BoardComment savedBoard=boardCommentRepository.save(insertBoardComment);
+        BoardComment savedBoardComment=boardCommentRepository.save(insertBoardComment);
+
+        BoardCommentDTO savedBoardCommentDTO=modelMapper.map(savedBoardComment,BoardCommentDTO.class);
 
         log.info("[BoardService] register end ==================");
-        return "댓글 등록 성공";
+        return savedBoardCommentDTO;
     }
 
     @Transactional
@@ -174,21 +200,115 @@ public class BoardServiceImpl implements BoardService{
     }
 
     @Override
-    public String deleteComment(int commentCode) {
+    public BoardCommentDTO deleteComment(int commentCode) {
 
         log.info("[BoardService] deleteComment start =================");
         Optional<BoardComment> result= Optional.ofNullable(boardCommentRepository.findByCommentCode(commentCode));
 
+        BoardComment boardCommentEntity=null;
         LocalDateTime dateTime=LocalDateTime.now();
         if(result.isPresent()) {
-            BoardComment boardComment=result.get();
+            BoardComment boardComment = result.get();
 
             boardComment.changeReplyDeleteDate(dateTime);
-            boardCommentRepository.save(boardComment);
-
+            boardCommentEntity=boardCommentRepository.save(boardComment);
 
         }
+        BoardCommentDTO response=modelMapper.map(boardCommentEntity,BoardCommentDTO.class);
 
-        return "댓글 삭제 성공";
+        return response;
     }
+
+    @Override
+    public InterestBoardDTO registerInterestBoard(int boardCode, int userCode) {
+        User user=userRepository.findByCode(userCode);
+        Board board=boardRepository.findByCode(boardCode);
+
+        InterestBoard interestBoard=new InterestBoard();
+        interestBoard.user(user);
+        interestBoard.board(board);
+
+        InterestBoard interestEntity=interestBoardRepository.save(interestBoard);
+        InterestBoardDTO interestDTO=modelMapper.map(interestEntity,InterestBoardDTO.class);
+
+        return interestDTO;
+
+    }
+
+    @Transactional
+    @Override
+    public InterestBoardDTO deleteInterestBoard(int interestCode) {
+
+        Optional<InterestBoard> result=interestBoardRepository.findByInterestCode(interestCode);
+        LocalDateTime dateTime=LocalDateTime.now();
+        InterestBoard interestBoardEntity=null;
+
+        if(result.isPresent()) {
+            InterestBoard interestBoard = result.get();
+
+            interestBoard.changeReplyDeleteDate(dateTime);
+            interestBoardEntity=interestBoardRepository.save(interestBoard);
+
+        }
+        InterestBoardDTO response=modelMapper.map(interestBoardEntity,InterestBoardDTO.class);
+
+        return response;
+    }
+
+    @Override
+    public PageResultDTO<InterestBoardDTO, Object[]> findInterestBoardList(PageRequestDTO pageRequestDTO) {
+        log.info("pageRequestDTO : "+pageRequestDTO);
+
+        Function<Object[],InterestBoardDTO> fn=(en->interestEnntityToDto((InterestBoard)en[0],(Board)en[1],(User)en[2],(Long)en[3]));
+
+        Page<Object[]> result=interestBoardRepository.findInterestWithReplyCount(
+                pageRequestDTO.getPageable(Sort.by("interestCode").descending())
+        );
+
+        return new PageResultDTO<>(result,fn);
+    }
+
+    @Override
+    public InterestBoardDTO findDetailInterestBoard(int interestCode) {
+
+        Optional<Object[]> result=interestBoardRepository.findDetailByInterestCode(interestCode);
+
+
+        return result.map(objects-> {
+
+            int iCode=(Integer)objects[0];
+            int boardCode=(int)(objects[1]);
+            int userCode=(int)(objects[2]);
+            String userName=(String)objects[3];
+            String title=(String)objects[4];
+            String content=(String)objects[5];
+            int viewCount=(int)(objects[6]);
+            String teamName=(String)objects[7];
+            String deptName=(String)objects[8];
+            LocalDateTime registerDate=(LocalDateTime)objects[9];
+            LocalDateTime updateDate=(LocalDateTime)objects[10];
+            LocalDateTime deleteDate=(LocalDateTime)objects[11];
+
+            InterestBoardDTO interestBoardDTO=new InterestBoardDTO();
+            interestBoardDTO.setInterestCode(iCode);
+            interestBoardDTO.setBoardCode(boardCode);
+            interestBoardDTO.setUserCode(userCode);
+            interestBoardDTO.setUserName(userName);
+            interestBoardDTO.setTitle(title);
+            interestBoardDTO.setContent(content);
+            interestBoardDTO.setViewCount(viewCount);
+            interestBoardDTO.setTeamName(teamName);
+            interestBoardDTO.setDeptName(deptName);
+            interestBoardDTO.setRegisterDate(registerDate);
+            interestBoardDTO.setUpdateDate(updateDate);
+            interestBoardDTO.setDeleteDate(deleteDate);
+
+
+            return interestBoardDTO;
+        }).orElseThrow(()->new EntityNotFoundException("\"InterestBoard not found with interestCode: \"" + interestCode));
+
+
+    }
+
+
 }

@@ -14,7 +14,8 @@ public interface BoardRepository extends JpaRepository<Board,Long> {
             "from Board b "+
             "left join b.boardType bt "+
             "right join b.user u "+
-            "where bt.boardTypeCode= :boardTypeCode")
+            "where bt.boardTypeCode= :boardTypeCode "+
+            "and b.deleteDate IS NULL ")
     Page<Board> findByBoardTypeCode(@Param("boardTypeCode")int boardTypeCode, Pageable paging);
 
     @Query("select b "+
@@ -22,14 +23,5 @@ public interface BoardRepository extends JpaRepository<Board,Long> {
             "where b.boardCode= :boardCode")
     Board findByCode(@Param("boardCode") int boardCode);
 
-    @Query("select bc "+
-            "from BoardComment bc "+
-            "left join bc.board b "+
-            "where b.boardCode= :boardCode")
-    BoardComment findByCodeWithComment(@Param("boardCode") int boardCode);
 
-    @Query("select bc "+
-            "from BoardComment bc "+
-            "where bc.commentCode= :commentCode")
-    BoardComment findByCommentCode(@Param("commentCode") int commentCode);
 }

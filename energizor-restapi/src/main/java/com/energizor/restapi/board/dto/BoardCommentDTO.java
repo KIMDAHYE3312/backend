@@ -1,5 +1,6 @@
 package com.energizor.restapi.board.dto;
 
+import com.energizor.restapi.board.entity.BaseEntity;
 import jakarta.persistence.Column;
 import lombok.*;
 
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @ToString
-public class BoardCommentDTO {
+public class BoardCommentDTO extends BaseEntity {
 
     private int commentCode;
     private String commentContent;
